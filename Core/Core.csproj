@@ -1,0 +1,31 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net5.0</TargetFramework>
+    <ParserGrammarFile>ConGrammar.g4</ParserGrammarFile>
+    <ParserOutputFolder>Src/Parser</ParserOutputFolder>
+    <ParserPackage>ConIntellisense.Core.Parser</ParserPackage>
+  </PropertyGroup>
+
+
+  <Target Name="Generate Parser files" BeforeTargets="PrepareForBuild">
+    <Exec Command="java org.antlr.v4.Tool $(ParserGrammarFile) -o $(ParserOutputFolder) -package $(ParserPackage) -visitor -Dlanguage=CSharp" ContinueOnError="true" />
+  </Target>
+
+  <ItemGroup>
+    <PackageReference Include="Antlr4.Runtime.Standard" Version="4.9.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="battlefieldCommands.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="ConGrammar.g4" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="battlefieldCommands.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+</Project>
