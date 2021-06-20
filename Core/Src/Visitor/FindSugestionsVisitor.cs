@@ -39,7 +39,7 @@ namespace ConIntellisense.Core.Visitor
             // But we still need to find out if is on the identifier or one of the arguments
             if(WhereIsCursosRelativeToToken(context.IDENTIFIER().Symbol) == 0)
             {
-                return FindSugestionsHelper.AutoCompleteMethod(string.Empty, context.IDENTIFIER().GetText());
+                return FindSugestionsHelper.AutoCompleteCommand(methodsTable, context.IDENTIFIER().GetText());
             }
 
             // We need to find out which argument it is
