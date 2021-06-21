@@ -19,9 +19,11 @@ namespace Test.Core
         };
 
         [Theory]
+        [InlineData("", new string[] { "ObjectTemplate", "AnimationSystem", "AnimationTemplate", "WeaponTemplate" })]
         [InlineData("Obje", new string[] { "ObjectTemplate" })]
         [InlineData("Ani", new string[] { "AnimationSystem", "AnimationTemplate" })]
         [InlineData("AnimationS", new string[] { "AnimationSystem" })]
+        [InlineData("ObjectTemplate.", new string[] { "3dMapIcon", "active" })]
         [InlineData("ObjectTemplate.3d", new string[] { "3dMapIcon" })]
         [InlineData("AnimationSystem.ac", new string[] { "accelaration", "active" })]
         [InlineData("WeaponTemplate.middleCommand.Me", new string[] { "Method" })]

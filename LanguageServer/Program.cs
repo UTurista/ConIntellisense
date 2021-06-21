@@ -37,6 +37,7 @@ namespace ConIntellisense.Server
                 .WithServices(ConfigureServices)
                 .WithHandler<SemanticTokensHandler>()
                 .WithHandler<TextDocumentSyncHandler>()
+                .WithHandler<CompletionHandler>()
              ).ConfigureAwait(true);
 
             server.LogInfo("asdasdasdasdasdasd");

@@ -28,16 +28,41 @@ namespace ConIntellisense.Core.Visitor
             this.methodsTable = methodsTable;
         }
 
+        public override IEnumerable<string> VisitFile([NotNull] ConGrammarParser.FileContext context)
+        {
+            
+            // If there's not a single character to limit the scope of our
+            // sugestion we return everything
+            if(column == 0)
+            {
+                return FindSugestionsHelper.AutoCompleteRoot(methodsTable);
+                
+            }
+            
+            return base.VisitFile(context);
+        }
+
+
+        public override IEnumerable<string> VisitBlock([NotNull] ConGrammarParser.BlockContext context)
+        {
+            if (IsCursorInsideNode(context))
+            {
+                foreach (var literal in context.expression())
+                {
+                    if (IsCursorInsideNode(literal))
+                    {
+                        VisitExpression(literal);
+                    }
+                }
+            }
+            return base.VisitBlock(context);
+        }
+
         public override IEnumerable<string> VisitCallExp([NotNull] ConGrammarParser.CallExpContext context)
         {
-            if (!IsCursorInsideNode(context))
-            {
-                return base.VisitCallExp(context);
-            }
-
             // We know the cursor is inside this node
             // But we still need to find out if is on the identifier or one of the arguments
-            if(WhereIsCursosRelativeToToken(context.IDENTIFIER().Symbol) == 0)
+            if(IsCursorOnToken(context.IDENTIFIER().Symbol))
             {
                 return FindSugestionsHelper.AutoCompleteCommand(methodsTable, context.IDENTIFIER().GetText());
             }
@@ -48,13 +73,25 @@ namespace ConIntellisense.Core.Visitor
             {
                 if (IsCursorInsideNode(arguments[argumentIdx]))
                 {
-                    return FindSugestionsHelper.AutoCompleteArgument(context.IDENTIFIER().GetText(), arguments[argumentIdx].GetText());
+                    return FindSugestionsHelper.AutoCompleteArgument(methodsTable, context.IDENTIFIER().GetText(), argumentIdx, arguments[argumentIdx].GetText());
                 }
             }
 
             // We should never reach here, since we know the cursor is inside this node
             // it should go to either the identifier or on of the arguments.
             return null;
+        }
+
+        public override IEnumerable<string> VisitRunExp([NotNull] ConGrammarParser.RunExpContext context)
+        {
+            var path = context.GetText().Substring(3).Trim(); // skip the 'run'
+            return FindSugestionsHelper.AutoCompletePath(path);
+        }
+
+        public override IEnumerable<string> VisitIncludeExp([NotNull] ConGrammarParser.IncludeExpContext context)
+        {
+            var path = context.GetText().Substring(7).Trim(); // skip the 'include'
+            return FindSugestionsHelper.AutoCompletePath(path);
         }
 
         protected override IEnumerable<string> AggregateResult(IEnumerable<string> aggregate, IEnumerable<string> nextResult)
@@ -69,41 +106,33 @@ namespace ConIntellisense.Core.Visitor
 
         private bool IsCursorInsideNode(ParserRuleContext context)
         {
-            if(WhereIsCursosRelativeToToken(context.Start) < 0)
+            if (IsCursorBeforeTheToken(context.Start) || IsCursorAfterTheToken(context.Stop))
             {
-                // Cursor is BEFORE the initial token
-                return false;
-            }
-
-            if (WhereIsCursosRelativeToToken(context.Stop) > 0)
-            {
-                // Cursor is AFTER the final token
                 return false;
             }
 
             return true;
         }
 
-        /// <summary>
-        /// Indicates where the cursor is relative to
-        /// the given token.
-        /// </summary>
-        /// <param name="token">The token to compare to.</param>
-        /// <returns>-1 if the cursor is BEFORE this token, 1 if the cursor is AFTER this token and zero when the cursor is on the token.</returns>
-        private int WhereIsCursosRelativeToToken(IToken token)
+        private bool IsCursorOnToken(IToken token)
         {
-            // Verifying the lines
-            if (line < token.Line || line > token.Line)
-            {
-                return -1;
-            }
+            // Can't be before and can't be after
+            return !IsCursorBeforeTheToken(token) && !IsCursorAfterTheToken(token);
+        }
 
-            if (column < token.StartIndex || column > token.StopIndex)
-            {
-                return 1;
-            }
+        private bool IsCursorBeforeTheToken(IToken token)
+        {
+            // Check:
+            // - Is the cursor on a previous line
+            // - Is the cursor on the line but starts before the initial token
+            return line < token.Line || (line == token.Line && column < token.Column);
+        }
 
-            return 0;
+
+        private bool IsCursorAfterTheToken(IToken token)
+        {
+            var nextToken = token.TokenSource.NextToken();
+            return !IsCursorBeforeTheToken(nextToken);
         }
     }
 }
