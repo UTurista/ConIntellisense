@@ -35,6 +35,7 @@ namespace ConIntellisense.Server
                 .AddDefaultLoggingProvider()
                 //.WithMinimumLogLevel(LogLevel.Trace)
                 .WithServices(ConfigureServices)
+                .WithHandler<SemanticTokensHandler>()
                 .WithHandler<TextDocumentSyncHandler>()
              ).ConfigureAwait(true);
 
