@@ -49,7 +49,9 @@ namespace ConIntellisense.Core.Helper
                 "if",
                 "else",     // I've checked and even outside a valid if block, C# IDEs offer the else statment
                 "elseif",   // I've checked and even outside a valid if block, C# IDEs offer the elseif statment
+                "endif",
                 "while",
+                "endwhile",
                 "run",
                 "include",
                 
