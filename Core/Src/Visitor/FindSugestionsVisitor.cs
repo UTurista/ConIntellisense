@@ -106,33 +106,43 @@ namespace ConIntellisense.Core.Visitor
 
         private bool IsCursorInsideNode(ParserRuleContext context)
         {
-            if (IsCursorBeforeTheToken(context.Start) || IsCursorAfterTheToken(context.Stop))
+            if (IsCursorBeforeTheToken(context.Start))
             {
                 return false;
             }
 
-            return true;
+            return IsCursorBeforeTheToken(context.Stop) || IsCursorOnToken(context.Stop);
         }
 
         private bool IsCursorOnToken(IToken token)
         {
-            // Can't be before and can't be after
-            return !IsCursorBeforeTheToken(token) && !IsCursorAfterTheToken(token);
-        }
+            // This is an simplification, we're assuming tokens 
+            // never go beyond one line
+            // (this is actually true for all tokens except the
+            // comments ones)
+            if (line != token.Line)
+            {
+                return false;
+            }
 
+            if(IsCursorBeforeTheToken(token))
+            {
+                return false;
+            }
+
+            // The 'IToken' does not offer end column and
+            // since we're assuming every token is never multi-line
+            // we get the last column by adding its length
+            var lastColumn = token.Column + token.Text.Length;
+            return column <= lastColumn;
+        }
+                  
         private bool IsCursorBeforeTheToken(IToken token)
         {
             // Check:
             // - Is the cursor on a previous line
             // - Is the cursor on the line but starts before the initial token
             return line < token.Line || (line == token.Line && column < token.Column);
-        }
-
-
-        private bool IsCursorAfterTheToken(IToken token)
-        {
-            var nextToken = token.TokenSource.NextToken();
-            return !IsCursorBeforeTheToken(nextToken);
         }
     }
 }
