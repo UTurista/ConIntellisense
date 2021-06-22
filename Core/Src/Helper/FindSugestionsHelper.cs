@@ -15,14 +15,19 @@ namespace ConIntellisense.Core.Helper
                 return methodTable.Select(s => s.Name);
             }
 
+            var possibleCommands = methodTable;
             // given the text 'Xxxx.Xxxx.Yyyy' we assume the 'Xxxx' is a proper command
             // and we simply want to figure out the 'Yyyy' thus we discard it for now
             var lastDot = commandText.LastIndexOf('.');
-            var parentCommandText = commandText.Substring(0, lastDot);
-            var parentCommand = GetCommand(methodTable, parentCommandText);
-            var methodText = commandText.Substring(lastDot + 1); // Skip the parentText including the dot
+            if(lastDot > 0)
+            {
+                var parentCommandText = commandText.Substring(0, lastDot);
+                var parentCommand = GetCommand(methodTable, parentCommandText);
+                possibleCommands = parentCommand.SubCommands;
+            }
 
-            return parentCommand?.SubCommands.Where(p => p.Name.StartsWith(methodText)).Select(p => p.Name) ?? Enumerable.Empty<string>();
+            var methodText = commandText.Substring(lastDot + 1); // Skip the parentText including the dot
+            return possibleCommands.Where(p => p.Name.StartsWith(methodText)).Select(p => p.Name) ?? Enumerable.Empty<string>();
         }
 
         internal static IEnumerable<string> AutoCompleteArgument(IEnumerable<Command> methodTable, string methodFullName, int argumentIdx, string argumentText)
