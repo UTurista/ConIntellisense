@@ -18,8 +18,35 @@ namespace Test.Core
             new Command{Name = "WeaponTemplate", SubCommands = new List<Command>{ new Command { Name = "middleCommand", SubCommands = new List<Command> { new Command { Name = "Method" } } }, } },
         };
 
+        [Fact]
+        public void TestAutoCompleteRoot()
+        {
+            var stream = CharStreams.fromString("");
+            ITokenSource lexer = new ConGrammarLexer(stream);
+            ITokenStream tokens = new CommonTokenStream(lexer);
+            ConGrammarParser parser = new(tokens);
+            var root = parser.file();
+
+            var sugestionFinder = new FindSugestionsVisitor(BasicMethodsTable, 1, 0);
+            var sugestions = sugestionFinder.Visit(root);
+
+            var expectedSugestions = new List<string>()
+            {
+                // All possible keywords
+                "if", "endwhile", "elseif", "else", "endif", "while", "run", "include",
+
+                // Comments are keywords (I guess)
+                "rem", "beginRem", "endRem",
+
+                // All root Commands
+                "ObjectTemplate", "AnimationSystem", "AnimationTemplate", "WeaponTemplate"
+            };
+            Assert.NotNull(sugestions);
+            Assert.Equal(expectedSugestions.Count, sugestions.Count());
+            Assert.Equal(expectedSugestions.OrderBy(s => s), sugestions.OrderBy(s => s));
+        }
+
         [Theory]
-        [InlineData("", new string[] { "ObjectTemplate", "AnimationSystem", "AnimationTemplate", "WeaponTemplate" })]
         [InlineData("Obje", new string[] { "ObjectTemplate" })]
         [InlineData("Ani", new string[] { "AnimationSystem", "AnimationTemplate" })]
         [InlineData("AnimationS", new string[] { "AnimationSystem" })]
