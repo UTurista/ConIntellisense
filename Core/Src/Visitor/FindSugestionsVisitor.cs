@@ -51,7 +51,7 @@ namespace ConIntellisense.Core.Visitor
                 {
                     if (IsCursorInsideNode(literal))
                     {
-                        VisitExpression(literal);
+                        return VisitExpression(literal);
                     }
                 }
             }
